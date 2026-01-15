@@ -1,0 +1,195 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=1.0in]{geometry}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{enumitem}                       % custom enum labels
+\usepackage{parskip}          
+\usepackage{physics}
+\usepackage{geometry} 
+\usepackage{esint}
+\geometry{
+  paperwidth=18cm,
+  left=8mm,
+  right=8mm,
+  top=8mm,
+  bottom=8mm,
+}
+\usepackage[framemethod=TikZ]{mdframed}     % graphics and framed envs
+
+\renewcommand{\familydefault}{\sfdefault}      % sans serifs text
+\setlength{\parindent}{0pt}                    % no paragraph indentation
+
+% region TITLE CONSTRUCTION
+\newlength\mywidth
+\mywidth=\wd0
+\renewcommand{\contentsname}{\hangindent=\mywidth \courseid: \coursetitle \\ \medskip \LARGE{[MY NAME HERE], \semester}}
+% endregion
+
+% region FRAMED ENVIRONMENTS
+\newcounter{chapter}\setcounter{chapter}{1}
+\newcounter{theo}[chapter]\setcounter{theo}{0}
+\newcommand{\numTheo}{\arabic{chapter}.\arabic{theo}}
+\newcommand{\mdftheo}[3]{
+    \mdfsetup{
+        frametitle={
+            \tikz[baseline=(current bounding box.east),outer sep=0pt]
+            \node[anchor=east,rectangle,fill=#3]
+            {\ifstrempty{#2}{\strut #1~\numTheo}{\strut #1~\numTheo:~#2}};
+        },
+        innertopmargin=4pt,linecolor=#3,linewidth=2pt,
+        frametitleaboveskip=\dimexpr-\ht\strutbox\relax,
+        skipabove=11pt,skipbelow=0pt
+    }
+}
+\newcommand{\mdfnontheo}[3]{
+    \mdfsetup{
+        frametitle={
+            \tikz[baseline=(current bounding box.east),outer sep=0pt]
+            \node[anchor=east,rectangle,fill=#3]
+            {\ifstrempty{#2}{\strut #1}{\strut #1:~#2}};
+        },
+        innertopmargin=4pt,linecolor=#3,linewidth=2pt,
+        frametitleaboveskip=\dimexpr-\ht\strutbox\relax,
+        skipabove=11pt,skipbelow=0pt
+    }
+}
+\newcommand{\mdfproof}[1]{
+    \mdfsetup{
+        skipabove=11pt,skipbelow=0pt,
+        innertopmargin=4pt,innerbottommargin=4pt,
+        topline=false,rightline=false,
+        linecolor=#1,linewidth=2pt
+    }
+}
+\newenvironment{theorem}[1][]{
+    \refstepcounter{theo}
+    \mdftheo{Theorem}{#1}{red!25}
+    \begin{mdframed}[]\relax
+}{\end{mdframed}}
+
+\newenvironment{lemma}[1][]{
+    \refstepcounter{theo}
+    \mdftheo{Lemma}{#1}{red!15}
+    \begin{mdframed}[]\relax
+}{\end{mdframed}}
+
+\newenvironment{corollary}[1][]{
+    \refstepcounter{theo}
+    \mdftheo{Corollary}{#1}{red!15}
+    \begin{mdframed}[]\relax
+}{\end{mdframed}}
+
+\newenvironment{definition}[1][]{
+    \mdfnontheo{Definition}{#1}{blue!20}
+    \begin{mdframed}[]\relax
+}{\end{mdframed}}
+
+\newenvironment{example}[1][]{
+    \mdfnontheo{Example}{#1}{yellow!40}
+    \begin{mdframed}[]\relax
+}{\end{mdframed}}
+
+\newenvironment{proof}[1][]{
+    \mdfproof{black!15}
+    \begin{mdframed}[]\relax
+\textit{Proof. }}{\end{mdframed}}
+% endregion
+
+% region NEW COMMANDS
+\newcommand{\ds}{\displaystyle}
+\newcommand{\pfn}[1]{\textrm{#1}}  % enables new functions
+\newcommand{\mbf}[1]{\mathbf{#1}}  % mathbf
+\newcommand{\C}{\mathbb{C}}        % fancy C
+\newcommand{\R}{\mathbb{R}}        % fancy R
+\newcommand{\Q}{\mathbb{Q}}        % fancy Q
+\newcommand{\Z}{\mathbb{Z}}        % fancy Z
+\newcommand{\N}{\mathbb{N}}   
+\newcommand{\K}{\mathbb{K}}  % fancy N
+\newcommand{\V}{\mathbf{V}} %vector space 
+\newcommand{\0}{\mathbf{0}} %zero vector 
+\newcommand{\from}{\leftarrow}
+\renewcommand{\i}[1]{\textit{#1}}
+\renewcommand{\b}[1]{\textbf{#1}}
+\newcommand{\qed}{$\square$}
+\newcommand{\range}{\text{range }}
+\newcommand{\inner}[2]{\langle #1, #2 \rangle}
+\title{Quantum Algorithms}
+\author{Hrishikesh Belagali}
+\begin{document}
+\maketitle
+\section{Basics}
+\subsection{Basic Gates}
+\begin{definition}[XOR]
+    Let $a,b \in \{0,1\}^n$. The \textbf{exclusive OR} (XOR) of $a$ and $b$, denoted by $a \oplus b$, is defined as:
+    \[
+        (a \oplus b)_i = 
+        \begin{cases}
+            0 & \text{if } a_i = b_i \\
+            1 & \text{if } a_i \neq b_i
+        \end{cases}
+    \]
+    for each $i = 1, 2, \ldots, n$.
+\end{definition}
+\begin{definition}[FANOUT]
+    Let $a \in \{0,1\}^n$ and $k \in \mathbb{N}$. The \textbf{FANOUT} of $a$ to $k$ copies, denoted by $\text{FANOUT}(a, k)$, is defined as the concatenation of $k$ copies of $a$:
+    \[
+        \text{FANOUT}(a, k) = \underbrace{a \| a \| \ldots \| a}_{k \text{ times}} \in \{0,1\}^{nk}
+    \]
+    The FANOUT is denoted by a solid dot with multiple outputs.
+\end{definition}
+\textbf{Note: } $\text{FANOUT}(a) = \text{CNOT}(a,0)$
+When you have a CNOT with a hollow dot, it means you are copying the negation of the control qubit to 
+the target qubit.
+\subsection{Universal Collection of Gates}
+We will first define what it means for a collection of gates to be universal for classical computing.
+\begin{definition}[Universal gateset]
+    A collection of logic gates is said to be universal for classical computing
+    iff 
+    $$\forall m, n \in \N, \forall f: \{0,1\}^m \to \{0,1\}^n,$$
+    there exists a Boolean circuit constructed from the gates in the gateset that computes $f$.
+\end{definition}
+The following gatesets are universal for classical computing: 
+\begin{itemize}
+    \item $\{\text{NAND}\}$
+    \item $\{\text{AND}, \text{OR}, \text{NOT}\}$ (You don't need the OR here)
+    \item $\{\text{Toffoli}\}$
+\end{itemize}
+The proofs can be done by induction on $n$, the number of output bits.
+\begin{definition}[Ancilla bits]
+    The \textbf{ancilla bits} are extra bits initialized to either 0 or 1 that can be used in the computation of a Boolean function.    
+\end{definition}
+\subsection{Reversible Gates and Circuits}
+A reversible gate/circuit is one where you can uniquely recover the input from the output. Naturally,
+it would make sense for the Boolean function it implements to be reversible.
+\begin{definition}[Reversible gate/circuit]
+    A logic gate/circuit is said to be reversible if it computes a bijective function from 
+    $\{0,1\}^n$ to $\{0,1\}^n$ for some $n \in \N$.
+\end{definition}
+\begin{example}
+    The NOT gate is reversible and its inverse is itself.
+\end{example}
+\begin{example}
+    The CNOT gate is reversible and its inverse is itself. This makes more sense if you write 
+    it as a function:
+    \[
+        \text{CNOT}(a,b) = (a, a \oplus b)
+    \]
+    To recover $(a,b)$ from $(a, a \oplus b)$, we can do:
+    \[
+        (a, (a \oplus b) \oplus a) = (a,b)
+    \]
+\end{example}
+An irreversible circuit can be made reversible through the use of ancilla bits. 
+\begin{definition}[Register]
+    A register is a collection of bits (or qubits).
+\end{definition}
+\begin{lemma}[Reversible circuit construction using Toffoli gates]
+    For any $m, n \in \N$ and any $f : \{0,1\}^n \to \{0,1\}^m$, there exists
+    $p \in \N$, a bit string $a \in \{0,1\}^p$ and $g : \{0,1\}^{n} \to \{0,1\}^{n+p - m}$ such that: 
+    there is a reversible circuit $C$ constructed from Toffoli gates that implements 
+    $\{ 0, 1 \}^n \times \{0, 1\}^p \to \{0, 1\}^m \times \{0, 1\}^{n+p - m}$ defined by:
+    $(x, a) \mapsto (f(x), g(x))$. $g(x)$ is called the garbage function.
+\end{lemma}
+\end{document}
